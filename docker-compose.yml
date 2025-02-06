@@ -1,0 +1,49 @@
+version: "3.9"
+
+services:
+  etl:
+    build: .
+    container_name: etl-pipeline
+    environment:
+      - JDBC_URL=${JDBC_URL}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD_FILE=/run/secrets/postgres_password
+    depends_on:
+      - db
+    networks:
+      - etl_network
+    volumes:
+      - ./etl_script.py:/app/etl_script.py  # Mount the Python script
+      - ./data.csv:/app/data.csv            # Mount the CSV data
+      - .:/app  # Mount the current directory for any additional files
+    secrets:
+      - postgres_password
+
+  db:
+    image: postgres:13
+    container_name: postgres-db
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD_FILE=/run/secrets/postgres_password
+    networks:
+      - etl_network
+    ports:
+      - 5432:5432
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./create_table.sql:/docker-entrypoint-initdb.d/create_table.sql
+    secrets:
+      - postgres_password
+
+networks:
+  etl_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local
+
+secrets:
+  postgres_password:
+    file: ${SECRET_POSTGRES_PASSWORD_PATH}

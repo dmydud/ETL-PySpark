@@ -1,0 +1,10 @@
+# Ignore all .env files in any directory
+*/.env
+
+# Ignore the 'secrets' directory
+secrets/
+
+# Ignore all .csv files
+*.csv
+
+.idea/*
